@@ -14,8 +14,12 @@ use Psr\Log\NullLogger;
  */
 class RdKafkaDriver extends GenericDriver
 {
+    private $config;
+
     public function __construct(RdKafkaContext $context, ...$args)
     {
+        $this->config = $args[0];
+
         parent::__construct($context, ...$args);
     }
 
@@ -44,5 +48,13 @@ class RdKafkaDriver extends GenericDriver
             $log('Create processor queue: %s', $queue->getQueueName());
             $this->getContext()->createConsumer($queue);
         }
+    }
+
+    protected function createTransportQueueName(string $name, bool $prefix): string
+    {
+        $clientPrefix = $prefix ? $this->config->getPrefix() : '';
+        $clientAppName = $prefix ? $this->config->getApp() : '';
+
+        return implode($this->config->getSeparator(), array_filter([$clientPrefix, $clientAppName, $name]));
     }
 }
